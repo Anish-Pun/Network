@@ -1,4 +1,4 @@
-# UnoReverse
+# UnoReverse HTTP-client project
 
 ## Inhoud van opdracht
 Schrijf een programma met naam "UnoReverse" dat bestaat uit een TCP-server en HTTP-client. De TCP server luistert op poort 22 (default ssh) naar nieuwe verbindingen en achterhaalt het IP-adres van de aanvaller (i.e. bot-net). Hij logt de inlogpoging in een logbestand samen met de ontvangen gegevens, netwerkstatistieken en de geo-locatie m.b.v. IP Geolocation API. Voor dit laatste maakt het programma gebruik van een HTTP-client om de API aan te spreken en de gegevens die terugkomen in de log te bewaren. Verder zal de server een omgekeerde aanval uitvoeren door een grootte hoeveelheid aan data terug te sturen.
@@ -23,7 +23,7 @@ Schrijf een programma met naam "UnoReverse" dat bestaat uit een TCP-server en HT
 - ✔️ Het geheel werk volledig zonder crashen en er wordt efficiënt met de resources (i.e. memory en sockets) van de computer gebruik gemaakt.
 - ✔️ Code staat professioneel op GitHub (i.e. meerdere nuttige commits en uitleg).
 - ✔️ Het geheel werkt en is beschikbaar op het internet (e.g. thuis m.b.v. NAT of werkt op publieke server).
-##Een mooie extra eens de rest werkt (zie de lijst hieronder) :
+### Een mooie extra eens de rest werkt (zie de lijst hieronder) :
   - ❌ Correcte documentatie a.d.h.v. flowchart (zie miro)
   - ✔️ Maak gebruik van pthread
   - ❌ IP's worden in een look-up tabel bewaard (e.g. linked-list) om herhalende aanvallen te kunnen loggen.
