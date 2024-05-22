@@ -14,7 +14,7 @@ Schrijf een programma met naam "UnoReverse" dat bestaat uit een TCP-server en HT
 - ✔️ HTTP client ontvangt de reactie van de HTTP server.
 - ✔️ HTTP client extraheert zuiver de volledige json reactie.
 - ✔️ HTTP client logt de geolocatie in logs.
-- ✔️ HTTP client sluit de verbinding zuiver af.
+- ❌ HTTP client sluit de verbinding zuiver af.
 - ✔️ TCP server accepteert gegevens van client en logt ze in logs.
 - ✔️ TCP server stuurt zoveel mogelijk gegevens naar de openstaande verbinding.
 - ✔️ TCP server houdt een teller bij hoeveel gegevens succesvol zijn afgeleverd en logt deze bij het sluiten van de verbinding in logs.
@@ -22,7 +22,7 @@ Schrijf een programma met naam "UnoReverse" dat bestaat uit een TCP-server en HT
 - ❌ TCP server kan meerdere verbindingen simultaan verwerken.
 - ✔️ Het geheel werk volledig zonder crashen en er wordt efficiënt met de resources (i.e. memory en sockets) van de computer gebruik gemaakt.
 - ✔️ Code staat professioneel op GitHub (i.e. meerdere nuttige commits en uitleg).
-- ✔️ Het geheel werkt en is beschikbaar op het internet (e.g. thuis m.b.v. NAT of werkt op publieke server).
+- ❌ Het geheel werkt en is beschikbaar op het internet (e.g. thuis m.b.v. NAT of werkt op publieke server).
 ### Een mooie extra eens de rest werkt (zie de lijst hieronder) :
   - ❌ Correcte documentatie a.d.h.v. flowchart (zie miro)
   - ✔️ Maak gebruik van pthread
