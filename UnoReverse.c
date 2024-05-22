@@ -6,7 +6,7 @@
 	#include <unistd.h> //for close
 	#include <stdlib.h> //for exit
 	#include <string.h> //for memset
-
+    #include <pthread.h> //for pthread_create
 	void OSInit( void )
 	{
 		WSADATA wsaData;
@@ -39,15 +39,16 @@
 
 int initialization();
 int connection( int internet_socket );
-void execution( int internet_socket );
+void execution( int client_internet_socket );
 void cleanup( int internet_socket, int client_internet_socket );
+int totalbytes_sent = 0;
 
 int main( int argc, char * argv[] )
 {
 	//////////////////
 	//Initialization//
 	//////////////////
-
+    printf("Program Start\n");
 	OSInit();
 
 	int internet_socket = initialization();
@@ -70,7 +71,7 @@ int main( int argc, char * argv[] )
 
 	//cleanup( internet_socket, client_internet_socket );
 
-	OSCleanup();
+	//OSCleanup();
 
 	return 0;
 }
@@ -139,9 +140,13 @@ int initialization()
 	return internet_socket;
 }
 
+char ip_address[INET6_ADDRSTRLEN];
+
 int connection( int internet_socket )
 {
-	printf("Waiting for connection\n");
+    printf("+-----------------------------+\n");
+	printf("|    Waiting for connection   |\n");
+    printf("+-----------------------------+\n");
 	//Step 2.1
 	struct sockaddr_storage client_internet_address;
 	socklen_t client_internet_address_length = sizeof client_internet_address;
@@ -152,18 +157,19 @@ int connection( int internet_socket )
 		close( internet_socket );
 		exit( 3 );
 	}
-	void * addr;
+	void* addr;
 	if( client_internet_address.ss_family == AF_INET )
 	{
-		struct sockaddr_in * ipv4 = (struct sockaddr_in *) &client_internet_address;
-		addr = &(ipv4->sin_addr);
+		struct sockaddr_in * s = (struct sockaddr_in *) &client_internet_address;
+		addr = &(s->sin_addr);
 	}
 	else
 	{
-		struct sockaddr_in6 * ipv6 = (struct sockaddr_in6 *) &client_internet_address;
-		addr = &(ipv6->sin6_addr);
+		struct sockaddr_in6 * s = (struct sockaddr_in6 *) &client_internet_address;
+		addr = &(s->sin6_addr);
 	}
-	char ip_address[INET6_ADDRSTRLEN];
+
+    char ip_address[INET6_ADDRSTRLEN];
 	inet_ntop( client_internet_address.ss_family, addr, ip_address, sizeof ip_address );
 
 	FILE* logfile = fopen("log.txt", "a");
@@ -172,38 +178,13 @@ int connection( int internet_socket )
 		close(client_socket);
 		exit(4);
 	}
-	printf(logfile, "Connection from %s\n", ip_address);
+	fprintf(logfile, "Connection from %s\n", ip_address);
 
 	return client_socket;
 }
 
-void execution( int internet_socket )
-{
 
-	//Step 3.1
-	int number_of_bytes_received = 0;
-	char buffer[1000];
-	number_of_bytes_received = recv( internet_socket, buffer, ( sizeof buffer ) - 1, 0 );
-	if( number_of_bytes_received == -1 )
-	{
-		perror( "recv" );
-	}
-	else
-	{
-		buffer[number_of_bytes_received] = '\0';
-		printf( "Received : %s\n", buffer );
-	}
-
-	//Step 3.2
-	int number_of_bytes_send = 0;
-	number_of_bytes_send = send( internet_socket, "Hello TCP world!", 16, 0 );
-	if( number_of_bytes_send == -1 )
-	{
-		perror( "send" );
-	}
-}
-
-void http_get(){
+void http(){
 	int sockfd;
 	struct sockaddr_in server_addr;
 	char response[1024];
@@ -211,7 +192,7 @@ void http_get(){
 
 	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
 		perror("Socket");
-		exit(1);
+		return;
 	}
 
 	server_addr.sin_family = AF_INET;
@@ -220,43 +201,67 @@ void http_get(){
 
 	if (connect(sockfd, (struct sockaddr *)&server_addr, sizeof(struct sockaddr)) == -1){
 		perror("Connect");
-		exit(1);
+		return;
 	}
 
-	sprintf(request, sizeof(request), "GET /%s HTTP/1.0\r\n\r\n", ip_address);
+    snprintf(request, sizeof(request), "GET /json/%s HTTP/1.0\r\nHost: ip-api.com\r\n\r\n", ip_address);
 
 	if(send(sockfd, request, strlen(request), 0) == -1){
 		perror("send");
-		exit(1);
+		return;
 	}
 
-	FILE* file = fopen("log.txt", "a");
-	if (file == NULL){
-		perror("fopen");
-		exit(1);
-	}
+    FILE* file = fopen("log.txt", "a");
+    if (file == NULL) {
+        perror("fopen");
+        return;
+    }
 
 	while (1)
 	{
 		ssize_t bytes_received = recv(sockfd, response, 1024 - 1, 0);
 		if (bytes_received == -1){
 			perror("recv");
-			exit(1);
+			break;
 		}
 		else if (bytes_received == 0){
 			break;
 		}
+
 		response[bytes_received] = '\0';
-		fprintf(file, "%s\n", response);
-		fprintf("%s\n", response);
+
+		fprintf(file, "Get request response: \n%s\n", response);
+		printf("Get request response: \n%s\n", response);
 	}
 	fclose(file);
 	close(sockfd);
 }
-void * send_message( void * arg )
+void* send_message(void* arg)
 {
-	int client_internet_socket = *(int *) arg;
-	const char * message = "Hello NOOB";
+	int client_internet_socket = *(int*) arg;
+	const char * message = 
+    "⠐⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠂\n"
+	"⠄⠄⣰⣾⣿⣿⣿⠿⠿⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣆⠄⠄\n"
+	"⠄⠄⣿⣿⣿⡿⠋⠄⡀⣿⣿⣿⣿⣿⣿⣿⣿⠿⠛⠋⣉⣉⣉⡉⠙⠻⣿⣿⠄⠄\n"
+	"⠄⠄⣿⣿⣿⣇⠔⠈⣿⣿⣿⣿⣿⡿⠛⢉⣤⣶⣾⣿⣿⣿⣿⣿⣿⣦⡀⠹⠄⠄\n"
+	"⠄⠄⣿⣿⠃⠄⢠⣾⣿⣿⣿⠟⢁⣠⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡄⠄⠄\n"
+	"⠄⠄⣿⣿⣿⣿⣿⣿⣿⠟⢁⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⠄⠄\n"
+	"⠄⠄⣿⣿⣿⣿⣿⡟⠁⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠄⠄\n"
+	"⠄⠄⣿⣿⣿⣿⠋⢠⣾⣿⣿⣿⣿⣿⣿⡿⠿⠿⠿⠿⣿⣿⣿⣿⣿⣿⣿⣿⠄⠄\n"
+	"⠄⠄⣿⣿⡿⠁⣰⣿⣿⣿⣿⣿⣿⣿⣿⠗⠄⠄⠄⠄⣿⣿⣿⣿⣿⣿⣿⡟⠄⠄\n"
+	"⠄⠄⣿⡿⠁⣼⣿⣿⣿⣿⣿⣿⡿⠋⠄⠄⠄⣠⣄⢰⣿⣿⣿⣿⣿⣿⣿⠃⠄⠄\n"
+	"⠄⠄⡿⠁⣼⣿⣿⣿⣿⣿⣿⣿⡇⠄⢀⡴⠚⢿⣿⣿⣿⣿⣿⣿⣿⣿⡏⢠⠄⠄\n"
+	"⠄⠄⠃⢰⣿⣿⣿⣿⣿⣿⡿⣿⣿⠴⠋⠄⠄⢸⣿⣿⣿⣿⣿⣿⣿⡟⢀⣾⠄⠄\n"
+	"⠄⠄⢀⣿⣿⣿⣿⣿⣿⣿⠃⠈⠁⠄⠄⢀⣴⣿⣿⣿⣿⣿⣿⣿⡟⢀⣾⣿⠄⠄\n"
+	"⠄⠄⢸⣿⣿⣿⣿⣿⣿⣿⠄⠄⠄⠄⢶⣿⣿⣿⣿⣿⣿⣿⣿⠏⢀⣾⣿⣿⠄⠄\n"
+	"⠄⠄⣿⣿⣿⣿⣿⣿⣿⣷⣶⣶⣶⣶⣶⣿⣿⣿⣿⣿⣿⣿⠋⣠⣿⣿⣿⣿⠄⠄\n"
+	"⠄⠄⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⢁⣼⣿⣿⣿⣿⣿⠄⠄\n"
+	"⠄⠄⢻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⢁⣴⣿⣿⣿⣿⣿⣿⣿⠄⠄\n"
+	"⠄⠄⠈⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠟⢁⣴⣿⣿⣿⣿⠗⠄⠄⣿⣿⠄⠄\n"
+	"⠄⠄⣆⠈⠻⢿⣿⣿⣿⣿⣿⣿⠿⠛⣉⣤⣾⣿⣿⣿⣿⣿⣇⠠⠺⣷⣿⣿⠄⠄\n"
+	"⠄⠄⣿⣿⣦⣄⣈⣉⣉⣉⣡⣤⣶⣿⣿⣿⣿⣿⣿⣿⣿⠉⠁⣀⣼⣿⣿⣿⠄⠄\n"
+	"⠄⠄⠻⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣶⣾⣿⣿⡿⠟⠄⠄\n"
+	"⠠⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄\n";
 
 	printf("\nATTACK!\n");
 	while (1)
@@ -266,11 +271,63 @@ void * send_message( void * arg )
 		{
 			perror("send");
 			break;
-		}		
+		}
+		usleep(1000000);
+		totalbytes_sent += bytes_sent;		
 	}
 	printf("\nATTACK END!\n");
-	return NULL;
+    return NULL;
+}
+
+void execution( int client_internet_socket )
+{
+    printf("+-----------------------------+\n");
+	printf("|    \nStarten an execution   |\n");
+    printf("+-----------------------------+\n");
+	http();
+	char buffer[1000];
+
+    pthread_t send_thread;
+    pthread_create(&send_thread, NULL, send_message, &client_internet_socket);
+
+	while (1)
+	{
+			//Step 3.1
+		int number_of_bytes_received = recv( client_internet_socket, buffer, ( sizeof buffer ) - 1, 0 );
+		if( number_of_bytes_received == -1 )
+		{
+			perror( "recv" );
+            break;
+		}
+		else if (number_of_bytes_received == 0)
+		{
+			printf("Client closed\n");
+			break;
+		}
+			buffer[number_of_bytes_received] = '\0';
+			printf( "Received : %s\n", buffer );
+
+		FILE* logfile = fopen("log.txt", "a");
+		if(logfile == NULL){
+		perror("fopen");
+		break;
+	}
+	fprintf(logfile, "client message: %s\n", buffer);
+	fclose(logfile);
+	}
 	
+	pthread_join(send_thread, NULL);
+
+	FILE* logfile = fopen("log.txt", "a");
+	if(logfile == NULL){
+		perror("fopen");
+		close(client_internet_socket);
+		exit(4);
+	}
+	fprintf(logfile, "Connection from %s\n", totalbytes_sent);
+	fclose(logfile);
+	printf("Connection from %s\n", totalbytes_sent);
+	close(client_internet_socket);
 }
 
 void cleanup( int internet_socket, int client_internet_socket )
